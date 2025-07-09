@@ -14,8 +14,8 @@ template <typename T>
 class List {
 private:
     int size = 0;
-    Node<T>* head = nullptr;
-    Node<T>* tail = nullptr;
+    Node<T>* head = null;
+    Node<T>* tail = null;
 
 public:
     List() {}
