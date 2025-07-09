@@ -1,153 +1,143 @@
-﻿#include <iostream> 
+﻿#include <iostream>
 using namespace std;
 
-// 템플릿 Node 구조체
 template <typename T>
-struct Node 
-{
+struct Node {
     T data;
+    Node<T>* prev;
     Node<T>* next;
-    
-    Node(T value) : data(value), next(nullptr) {} 
+
+    Node(T value) : data(value), prev(nullptr), next(nullptr) {}
 };
 
-// 템플릿 List 클래스
-template <typename T> 
-class List 
-{
-private: 
-    Node<T>* head = nullptr; 
-    int size = 0; 
+template <typename T>
+class List {
+private:
+    int size = 0;
+    Node<T>* head = nullptr;
+    Node<T>* tail = nullptr;
 
 public:
-    // 생성자
-    List() {} 
-    // 소멸자
-    ~List() 
-    {
-        while (head != nullptr)  
-        {
+    List() {}
+    ~List() {
+        while (head) {
             Node<T>* temp = head;
-            head = head->next; 
+            head = head->next;
             delete temp;
         }
     }
 
-    // 앞에 노드 추가
-    void push_front(T value) 
-    {
-        Node<T>* newNode = new Node<T>(value); 
-        if (head != nullptr)
-        {
-            newNode->next = head;
-            head = newNode;            
-        }
-        else
-        {
-            head = newNode;
-            newNode->next = nullptr;            
-        }         
-        size++; 
-    } 
-
-    bool empty()
-    {
-        bool temp = true; 
-        if (head != nullptr)
-            temp = false;
-        return temp; 
+    void push_front(T value) {
+        Node<T>* newNode = new Node<T>(value);
+        newNode->next = head;
+        if (head) head->prev = newNode;
+        head = newNode;
+        if (!tail) tail = newNode;
+        ++size;
     }
 
-    // 리스트 끝에 노드 추가 
-    void push_back(T value) 
-    {
-        Node<T>* newNode = new Node<T>(value); 
-        if (head != nullptr)  
-        {
-            Node<T>* current = head; 
-            // current->next가 nullptr이면 while 바로 벗어남 
-            // 즉 맨 끝 노드로 이동하는 방법임 
-            while (current->next != nullptr) 
-            {
-                current = current->next;
-            }
-            // 맨 끝 노드의 다음에 새로운 노드를 할당함 
-            current->next = newNode;            
-        }
-        else 
-        {
-            head = newNode; 
-        } 
+    void push_back(T value) {
+        Node<T>* newNode = new Node<T>(value);
+        newNode->prev = tail;
+        if (tail) tail->next = newNode;
+        tail = newNode;
+        if (!head) head = newNode;
+        ++size;
+    }
 
-        size++; 
-    } 
-
-    // pop_front
-    T pop_front() 
-    {
+    T pop_front() {
         if (!head) throw runtime_error("empty");
-        Node<T>* tmp = head;
-        T ret = std::move(tmp->data);  // 복사 대신 이동 가능
+        Node<T>* temp = head;
+        T ret = move(temp->data);
         head = head->next;
-        delete tmp;
+        if (head) head->prev = nullptr;
+        else tail = nullptr;
+        delete temp;
         --size;
         return ret;
     }
 
-    // pop_back
     T pop_back() {
-        if (!head) throw runtime_error("empty");
-        if (!head->next) {
-            T ret = std::move(head->data);
-            delete head;
-            head = nullptr;
-            --size;
-            return ret;
-        }
-        Node<T>* cur = head;
-        while (cur->next->next) cur = cur->next;
-        T ret = std::move(cur->next->data);
-        delete cur->next;
-        cur->next = nullptr;
+        if (!tail) throw runtime_error("empty");
+        Node<T>* temp = tail;
+        T ret = move(temp->data);
+        tail = tail->prev;
+        if (tail) tail->next = nullptr;
+        else head = nullptr;
+        delete temp;
         --size;
         return ret;
-    } 
+    }
 
-    // 리스트 출력
-    void print() const 
-    {
-        Node<T>* current = head; 
-        while (current) 
-        {
-            cout << current->data << " -> "; 
-            current = current->next; 
+    void print() const {
+        Node<T>* current = head;
+        while (current) {
+            cout << current->data << " <-> ";
+            current = current->next;
         }
         cout << "nullptr" << endl;
     }
 
-    // 리스트 크기 반환
-    int get_size() const 
-    {
+    void reverse() {
+        Node<T>* current = head;
+        Node<T>* temp = nullptr;
+        while (current) {
+            temp = current->prev;
+            current->prev = current->next;
+            current->next = temp;
+            current = current->prev;
+        }
+        if (temp) {
+            temp = temp->prev;
+            swap(head, tail);
+        }
+    }
+
+    void remove(T value) {
+        Node<T>* current = head;
+        while (current) {
+            if (current->data == value) {
+                Node<T>* toDelete = current;
+                if (current->prev) current->prev->next = current->next;
+                else head = current->next;
+                if (current->next) current->next->prev = current->prev;
+                else tail = current->prev;
+                current = current->next;
+                delete toDelete;
+                --size;
+            }
+            else {
+                current = current->next;
+            }
+        }
+    }
+
+    bool empty() const {
+        return size == 0;
+    }
+
+    int get_size() const {
         return size;
     }
 };
 
+int main() {
+    List<int> myList;
 
-int main() 
-{
-    List<int> myList; 
-
-    myList.push_front(10); 
-    myList.push_front(20); 
-    myList.push_back(55); 
-    myList.push_front(30); 
+    myList.push_front(10);
+    myList.push_front(20);
+    myList.push_back(55);
+    myList.push_front(30);
     myList.pop_front();
-    myList.push_back(77); 
-    myList.pop_back(); 
+    myList.push_back(77);
+    myList.remove(55);
 
-    myList.print();  // 출력: 30 -> 20 -> 10 -> nullptr 
-    cout << "Size: " << myList.get_size() << endl;  // 출력: Size: 3 
-    cout << myList.empty() << endl; 
+    myList.print();  // 출력: 20 <-> 10 <-> 77 <-> nullptr
+    cout << "Size: " << myList.get_size() << endl;
+    cout << "Empty: " << myList.empty() << endl;
+
+    myList.reverse();
+    myList.print();  // 출력: 77 <-> 10 <-> 20 <-> nullptr
 
     return 0;
 }
