@@ -50,6 +50,14 @@ public:
         size++; 
     } 
 
+    bool empty()
+    {
+        bool temp = true; 
+        if (head != nullptr)
+            temp = false;
+        return temp; 
+    }
+
     // 리스트 끝에 노드 추가 
     void push_back(T value) 
     {
@@ -138,7 +146,8 @@ int main()
     myList.pop_back(); 
 
     myList.print();  // 출력: 30 -> 20 -> 10 -> nullptr 
-    cout << "Size: " << myList.get_size() << endl;  // 출력: Size: 3
+    cout << "Size: " << myList.get_size() << endl;  // 출력: Size: 3 
+    cout << myList.empty() << endl; 
 
     return 0;
 }
